@@ -228,4 +228,44 @@ class TexticleTest < Test::Unit::TestCase
       assert_not_empty Game.search_by_title("harry")
     end
   end
+
+  context "when setting partial match" do
+    setup do
+      Game.create :system => "PS3", :title => "Harry Potter & the Deathly Hallows"
+      assert_empty Game.search_by_title("%rry%")
+      def Game.partial_match
+        true
+      end
+    end
+
+    teardown do
+      def Game.partial_match
+        false
+      end
+      Game.delete_all
+    end
+
+    should "search with word partial match" do
+      assert_not_empty Game.search_by_title("%rry%")
+    end
+
+    context "and setting patial match case sensitive" do
+      setup do
+        def Game.partial_match_case_sensitive
+          true
+        end
+      end
+
+      teardown do
+        def Game.partial_match_case_sensitive
+          true
+        end
+      end
+
+      should "search with case sensitive" do
+        assert_empty Game.search_by_title("%rry p%")
+        assert_not_empty Game.search_by_title("%rry P%")
+      end
+    end
+  end
 end

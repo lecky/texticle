@@ -61,9 +61,20 @@ module Texticle
         column = connection.quote_column_name(column_or_table)
         search_term = connection.quote normalize(Helper.normalize(search_term))
         @similarities << "ts_rank(to_tsvector(#{language}, #{table_name}.#{column}::text), to_tsquery(#{language}, #{search_term}::text))"
-        @conditions << "to_tsvector(#{language}, #{table_name}.#{column}::text) @@ to_tsquery(#{language}, #{search_term}::text)"
+        condition = "to_tsvector(#{language}, #{table_name}.#{column}::text) @@ to_tsquery(#{language}, #{search_term}::text)"
+        partial_match_condition = " OR #{table_name}.#{column} #{partial_match_case_sensitive ? 'LIKE' : 'ILIKE'} #{search_term}"
+        condition = condition + partial_match_condition if partial_match && column !~ /id/
+        @conditions << condition
       end
     end
+  end
+
+  def partial_match
+    false
+  end
+
+  def partial_match_case_sensitive
+    false
   end
 
   def normalize(query)
